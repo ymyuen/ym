@@ -1,8 +1,7 @@
 # ym
 Ensure the JDK is 1.8 or higher
 
-
-add the sqlite-jdbc-3.16.1.jar into the class path
+Edit the sqlite-jdbc-3.16.1.jar into the class path
 
 Go to project_saved_path/bin  on the server and client side
 
