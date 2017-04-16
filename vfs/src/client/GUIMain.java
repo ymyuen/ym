@@ -50,21 +50,26 @@ public class GUIMain {
 		this.system=system;
 		this.diskpath=currentpath;
 		this.avaliableSize=avaliable;
-		File temp=new File(currentpath);
-		if(temp.exists()&&(!temp.isFile())){
-		   File [] filelist=temp.listFiles();
-		   if(filelist!=null&&filelist.length>0){
-			   for(int i=0;i<filelist.length;i++){
-				   file.add(filelist[i]);
-				   if(!filelist[i].isFile()){
-					   type.add("Floder");
-				   }else{
-					   type.add("File");
+		File[] filelist;
+		try {
+			filelist = system.readfloder(currentpath);
+			if(filelist!=null&&filelist.length>0){
+				   for(int i=0;i<filelist.length;i++){
+					   file.add(filelist[i]);
+					   if(system.readfloder(filelist[i].getPath())==null){
+						   type.add("File");
+					   }else{
+						   type.add("Floder");
+					   }
 				   }
 			   }
-		   }
+		} catch (RemoteException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
-	}
+		   
+		}
+	
    public static void main(String []args){
 	 //  GUIMain gui=new GUIMain();
 	 //  gui.GUIDick();
@@ -112,10 +117,11 @@ public class GUIMain {
 				for(int i=0;i<fi.length;i++){
 					nameModel.addElement(fi[i].getName());
 					file.add(fi[i]);
-					if(fi[i].isFile()){
+					if(system.readfloder(fi[i].getPath())==null){
 						typeModel.addElement("File");
 						type.add("File");
 					}else{
+						System.out.println(fi[i].getName()+"is a floder");
 						typeModel.addElement("Floder");
 						type.add("Floder");
 						
@@ -143,12 +149,15 @@ public void printResult(ArrayList<File> f,DefaultListModel nameModel,DefaultList
 		for(File i:f){
 			nameModel.addElement(i.getName());
 			file.add(i);
-			if(i.isFile()){
+			try{
+			if(system.readfloder(i.getPath())==null){
 				typeModel.addElement("File");
 				type.add("File");
 			}else{
 				typeModel.addElement("Floder");
 				type.add("Floder");
+			}}catch(Exception e){
+				e.printStackTrace();
 			}
 		}
 		namelist.setSelectedIndex(selectedfile);
@@ -232,7 +241,7 @@ public void printResult(ArrayList<File> f,DefaultListModel nameModel,DefaultList
 		    if(filelist!=null && filelist.length!=0){
 		    	String filepath=savedpath+File.separator+source.getName();
 		    	for(int i=0;i<filelist.length;i++){
-		    		if(filelist[i].isFile()){
+		    		if(system.readfloder(filelist[i].getPath())==null){
 		    		     byte[] a=filetobyte(filelist[i].getPath());
 		    		     system.saving(filepath+File.separator+filelist[i].getName(), a);
 		    		}else{
@@ -255,33 +264,42 @@ public void printResult(ArrayList<File> f,DefaultListModel nameModel,DefaultList
 	   if(!f.exists()){
 		   f.mkdirs();
 	   }
-	   File [] flist=s.listFiles();
-	   if(flist!=null&&flist.length>=0){
-		   for(int i=0;i<flist.length;i++){
-			   if(flist[i].isFile()){
-				   try {
-					byte[] c=system.filetobyte(flist[i].getPath());
-					saving(filepath+File.separator+flist[i].getName(), c);
-				} catch (RemoteException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (FileNotFoundException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				   
-			   }else{
-				   downloadfile(flist[i],filepath);
-				   
+	   File[] flist;
+	try {
+		flist = system.readfloder(s.getPath());
+		  if(flist!=null&&flist.length!=0){
+			   for(int i=0;i<flist.length;i++){
+				   if(system.readfloder(flist[i].getPath())==null){
+					   try {
+						byte[] c=system.filetobyte(flist[i].getPath());
+						saving(filepath+File.separator+flist[i].getName(), c);
+					} catch (RemoteException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (FileNotFoundException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					   
+				   }else{
+					   downloadfile(flist[i],filepath);
+					   
+				   }
 			   }
-		   }
-	   }
+			   }
+	} catch (RemoteException e1) {
+		// TODO Auto-generated catch block
+		e1.printStackTrace();
+		
+	}
+	 
+ }
 	   
 	   
-   }
+   
    public void updateFilename(DefaultListModel nameModel,DefaultListModel typeModel ,JList namelist ,JList typelist){
 		JFrame gui=new JFrame();
 		JPanel mainGUI=new JPanel(new GridLayout(2,2));
@@ -326,7 +344,7 @@ public void printResult(ArrayList<File> f,DefaultListModel nameModel,DefaultList
 	   DefaultListModel typeModel=new DefaultListModel();
 	   if(type.size()>0){
 		   for(String s:type){
-			   fileModel.addElement(s);
+			   typeModel.addElement(s);
 		   }
 	   }
 	   JList type=new JList(typeModel);
@@ -369,10 +387,14 @@ public void printResult(ArrayList<File> f,DefaultListModel nameModel,DefaultList
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			// TODO Auto-generated method stub
-			if(!file.get(selectedfile).isFile()){
+			try{
+			if(system.readfloder(file.get(selectedfile).getPath())!=null){
 				currentpath=currentpath+File.separator+file.get(selectedfile).getName();
 				updatelist(fileModel,typeModel,filelist,type);
 
+			}
+			}catch(Exception r){
+				r.printStackTrace();
 			}
 			
 		}
@@ -423,7 +445,7 @@ public void printResult(ArrayList<File> f,DefaultListModel nameModel,DefaultList
 		public void actionPerformed(ActionEvent e) {
 			// TODO Auto-generated method stub
 			try {
-				if(file.get(selectedfile).isFile()){
+				if(system.readfloder(file.get(selectedfile).getPath())==null){
 				  system.copyfile(file.get(selectedfile).getPath());
 				}else{
 				  system.copyfloder(file.get(selectedfile).getPath());
