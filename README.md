@@ -3,9 +3,11 @@ Ensure the JDK is 1.8 or higher
 
 
 add the sqlite-jdbc-3.16.1.jar into the class path
+Go to project_saved_path/bin  on the server and client side
+Type rmic vfc.ServerSystem.   on the server and client side
+Type rmic vfc.databaseHandler.on the server and client side
 
-
-1.1	Type command rmiregistry on the server side to start the RMI server.
+1.1	Type command rmiregistry on the server and client side to start the RMI server.
 
 
 1.2	Run the ServerSystem.class and databaseHandler.class file with the sqlite-jdbc-3.16.1.jar file
